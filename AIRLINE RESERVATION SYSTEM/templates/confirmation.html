@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Confirmation | {{ booking.pnr }} | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Your journey is confirmed. Have a great flight!" %}
+
+{% block content %}
+<div class="container py-5 my-2">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Boarding Pass Ticket Container -->
+            <div class="boarding-pass shadow-lg">
+                <!-- Header -->
+                <div class="boarding-pass-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="fs-4 me-2">✈</span>
+                            <span class="fw-bold fs-5 tracking-wide">AIRLINE BOARDING PASS</span>
+                        </div>
+                        <span class="badge bg-white bg-opacity-25 text-white">{{ booking.aircraft_name }} &bull; Flight {{ booking.flight_number }}</span>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-white-50 small d-block">BOOKING REFERENCE (PNR)</span>
+                        <span class="pnr-tag">{{ booking.pnr }}</span>
+                    </div>
+                </div>
+
+                <!-- Main Ticket Body -->
+                <div class="p-4 p-md-5">
+                    <!-- Status Banner -->
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap gap-2">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Reservation Status</span>
+                            {% if booking.status == 'CONFIRMED' %}
+                                <span class="badge bg-success-subtle text-success fs-5 px-3 py-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i> CONFIRMED
+                                </span>
+                            {% elif booking.status == 'WAITLISTED' %}
+                                <span class="badge bg-warning-subtle text-warning fs-5 px-3 py-2">
+                                    <i class="bi bi-clock-history me-1"></i> WAITLISTED (Position #{{ booking.waitlist_position }})
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger fs-5 px-3 py-2">
+                                    <i class="bi bi-x-circle-fill me-1"></i> CANCELLED
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="text-md-end">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Passenger</span>
+                            <h4 class="fw-bold mb-0 text-dark">{{ booking.passenger_name }}</h4>
+                        </div>
+                    </div>
+
+                    <!-- Flight Route Grid -->
+                    <div class="row align-items-center g-4 my-2">
+                        <div class="col-md-5 text-center text-md-start">
+                            <span class="text-muted small text-uppercase">Origin</span>
+                            <h2 class="display-6 fw-bold text-primary mb-0">{{ booking.source_code }}</h2>
+                            <h5 class="fw-semibold mb-0">{{ booking.source_city }}</h5>
+                            <span class="text-muted very-small">{{ booking.source_name }}</span>
+                            <div class="mt-2 text-muted small">
+                                <i class="bi bi-clock me-1"></i> Departure: <strong>{{ booking.departure_time }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <div class="text-muted very-small mb-1">{{ booking.travel_date }}</div>
+                            <div class="route-arrow">
+                                <div class="route-arrow-line">
+                                    <i class="bi bi-airplane-fill route-arrow-icon"></i>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-muted border small mt-1">Non-stop</span>
+                        </div>
+
+                        <div class="col-md-5 text-center text-md-end">
+                            <span class="text-muted small text-uppercase">Destination</span>
+                            <h2 class="display-6 fw-bold text-primary mb-0">{{ booking.dest_code }}</h2>
+                            <h5 class="fw-semibold mb-0">{{ booking.dest_city }}</h5>
+                            <span class="text-muted very-small">{{ booking.dest_name }}</span>
+                            <div class="mt-2 text-muted small">
+                                <i class="bi bi-clock me-1"></i> Arrival: <strong>{{ booking.arrival_time }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Perforated Tear Line -->
+                    <div class="tear-line my-4"></div>
+
+                    <!-- Ticket Details Grid -->
+                    <div class="row g-3 pt-2">
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted very-small text-uppercase d-block">Seat Number</span>
+                            <span class="fw-bold fs-4 text-dark">{{ booking.seat_number|default('WL', true) }}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted very-small text-uppercase d-block">Cabin Class</span>
+                            <span class="fw-bold fs-5 text-dark">{{ booking.seat_class|default('Economy') }}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted very-small text-uppercase d-block">Fare Paid</span>
+                            <span class="fw-bold fs-5 text-success">₹{{ "{:,.2f}".format(booking.total_amount) }}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted very-small text-uppercase d-block">Transaction Ref</span>
+                            <span class="font-monospace small text-muted">{{ booking.transaction_ref|default('N/A') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Actions Footer -->
+                <div class="p-4 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Print / Save Boarding Pass
+                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('booking.my_bookings') }}" class="btn btn-primary btn-sm px-3">
+                            <i class="bi bi-ticket-perforated me-1"></i> View In My Bookings
+                        </a>
+                        <a href="{{ url_for('flights.search') }}" class="btn btn-outline-primary btn-sm px-3">
+                            Book Another Flight
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

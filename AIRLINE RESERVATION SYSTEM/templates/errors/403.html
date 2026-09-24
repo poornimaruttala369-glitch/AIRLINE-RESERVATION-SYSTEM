@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Restricted Access | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Restricted airspace. Authorized personnel only." %}
+
+{% block content %}
+<div class="container text-center py-5 my-5">
+    <div class="error-card card p-5 shadow-sm mx-auto" style="max-width: 540px;">
+        <div class="display-1 text-danger mb-3">403</div>
+        <h2 class="h3 mb-3 font-weight-bold">Restricted Airspace</h2>
+        <p class="text-muted mb-4">
+            You do not have administrative clearance to access this terminal area.
+        </p>
+        <div>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary px-4 py-2 me-2">Log In as Admin</a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4 py-2">Return Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

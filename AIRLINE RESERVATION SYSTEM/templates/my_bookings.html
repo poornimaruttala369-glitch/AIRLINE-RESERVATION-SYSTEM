@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}My Trips & Bookings | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Your journeys, all in one place." %}
+
+{% block content %}
+<div class="container py-4 my-2">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">My Flight Bookings</h2>
+            <p class="text-muted small mb-0">View scheduled reservations, e-tickets, and manage cancellations.</p>
+        </div>
+        <a href="{{ url_for('flights.search') }}" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-plus-circle me-1"></i> Book New Flight
+        </a>
+    </div>
+
+    {% if bookings %}
+        <div class="row g-4">
+            {% for b in bookings %}
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                        <div class="row align-items-center g-3">
+                            <!-- PNR & Status -->
+                            <div class="col-md-2 text-center text-md-start">
+                                <span class="text-muted very-small text-uppercase d-block">PNR Reference</span>
+                                <span class="font-monospace fs-5 fw-bold text-primary">{{ b.pnr }}</span>
+                                <div class="mt-2">
+                                    {% if b.status == 'CONFIRMED' %}
+                                        <span class="badge bg-success-subtle text-success border border-success">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Confirmed
+                                        </span>
+                                    {% elif b.status == 'WAITLISTED' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning">
+                                            <i class="bi bi-clock-history me-1"></i> Waitlisted #{{ b.waitlist_position }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger">
+                                            <i class="bi bi-x-circle-fill me-1"></i> Cancelled
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Flight & Route Details -->
+                            <div class="col-md-5">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-light text-dark border">{{ b.flight_number }}</span>
+                                    <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i> {{ b.travel_date }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div>
+                                        <strong class="fs-5">{{ b.source_code }}</strong>
+                                        <div class="text-muted very-small">{{ b.source_city }}</div>
+                                        <div class="small fw-semibold">{{ b.departure_time }}</div>
+                                    </div>
+                                    <div class="text-muted px-2">&rarr;</div>
+                                    <div>
+                                        <strong class="fs-5">{{ b.dest_code }}</strong>
+                                        <div class="text-muted very-small">{{ b.dest_city }}</div>
+                                        <div class="small fw-semibold">{{ b.arrival_time }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seat & Amount -->
+                            <div class="col-md-2 text-center text-md-start">
+                                <span class="text-muted very-small text-uppercase d-block">Allocated Seat</span>
+                                <span class="fw-bold fs-5 text-dark">{{ b.seat_number|default('Waitlisted', true) }}</span>
+                                <div class="very-small text-muted">{{ b.seat_class|default('Economy') }}</div>
+                                <div class="fw-bold text-success mt-1">₹{{ "{:,.2f}".format(b.total_amount) }}</div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="col-md-3 text-center text-md-end">
+                                <a href="{{ url_for('booking.confirmation', pnr=b.pnr) }}" class="btn btn-outline-primary btn-sm mb-2 w-100">
+                                    <i class="bi bi-eye me-1"></i> View Boarding Pass
+                                </a>
+                                {% if b.status in ('CONFIRMED', 'WAITLISTED') %}
+                                    <form action="{{ url_for('booking.cancel', booking_id=b.booking_id) }}" method="POST" 
+                                          onsubmit="return confirm('Are you sure you want to cancel booking {{ b.pnr }}? The seat will be released and eligible waitlisted passengers will be promoted.');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                            <i class="bi bi-x-circle me-1"></i> Cancel Reservation
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted very-small d-block text-center">Seat Released</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty Trips State -->
+        <div class="card p-5 text-center bg-white border-0 shadow-sm rounded-4 my-4">
+            <div class="fs-1 text-muted mb-3"><i class="bi bi-ticket-perforated"></i></div>
+            <h4 class="fw-bold">No Bookings Found</h4>
+            <p class="text-muted mx-auto" style="max-width: 440px;">
+                You haven't booked any flights yet. Start your journey by searching our available routes!
+            </p>
+            <div class="mt-2">
+                <a href="{{ url_for('flights.search') }}" class="btn btn-primary px-4 py-2 rounded-pill">
+                    Search Flights &rarr;
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Flight Schedule Management | Admin | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Manage flights. Manage bookings. Keep journeys moving." %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0">Flight Schedule Management</h2>
+            <p class="text-muted small mb-0">Add new commercial flight operations and adjust operational status.</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFlightModal">
+            <i class="bi bi-plus-circle me-1"></i> Add New Flight
+        </button>
+    </div>
+
+    <!-- Navigation Pills -->
+    <div class="d-flex gap-2 mb-4 border-bottom pb-3 flex-wrap">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">Overview</a>
+        <a href="{{ url_for('admin.manage_flights') }}" class="btn btn-dark btn-sm">Flight Schedules</a>
+        <a href="{{ url_for('admin.manage_aircraft') }}" class="btn btn-outline-secondary btn-sm">Fleet &amp; Seats</a>
+        <a href="{{ url_for('admin.overbooking_policy') }}" class="btn btn-outline-secondary btn-sm">Overbooking Policy</a>
+        <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline-secondary btn-sm">All Bookings</a>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary btn-sm">Passengers</a>
+    </div>
+
+    <!-- Flight Schedules Table -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Flight No</th>
+                        <th>Route</th>
+                        <th>Aircraft</th>
+                        <th>Date</th>
+                        <th>Departure / Arrival</th>
+                        <th>Base Fare</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in flights %}
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary">{{ f.flight_number }}</td>
+                            <td>
+                                <strong>{{ f.source_code }}</strong> ({{ f.source_city }}) 
+                                &rarr; 
+                                <strong>{{ f.dest_code }}</strong> ({{ f.dest_city }})
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ f.aircraft_name }}</span>
+                                <span class="very-small text-muted d-block">{{ f.total_seats }} seats</span>
+                            </td>
+                            <td>{{ f.travel_date }}</td>
+                            <td>{{ f.departure_time }} - {{ f.arrival_time }}</td>
+                            <td class="fw-bold text-success">₹{{ "{:,.2f}".format(f.base_price) }}</td>
+                            <td>
+                                {% if f.status == 'SCHEDULED' %}
+                                    <span class="badge bg-success-subtle text-success">SCHEDULED</span>
+                                {% elif f.status == 'DELAYED' %}
+                                    <span class="badge bg-warning-subtle text-warning">DELAYED</span>
+                                {% elif f.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger-subtle text-danger">CANCELLED</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">{{ f.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <!-- Quick Status Change Form -->
+                                <form action="{{ url_for('admin.update_flight_status', flight_id=f.flight_id) }}" method="POST" class="d-inline-flex gap-1">
+                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="SCHEDULED" {% if f.status == 'SCHEDULED' %}selected{% endif %}>Scheduled</option>
+                                        <option value="DELAYED" {% if f.status == 'DELAYED' %}selected{% endif %}>Delayed</option>
+                                        <option value="CANCELLED" {% if f.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                                        <option value="COMPLETED" {% if f.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="8" class="text-center text-muted py-4">No flights registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Flight Modal -->
+<div class="modal fade" id="addFlightModal" tabindex="-1" aria-labelledby="addFlightModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header bg-navy text-white">
+                <h5 class="modal-title" id="addFlightModalLabel"><i class="bi bi-airplane me-2"></i>Schedule New Flight</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.manage_flights') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Flight Number</label>
+                            <input type="text" name="flight_number" class="form-control text-uppercase" placeholder="e.g. AR601" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Assigned Aircraft</label>
+                            <select name="aircraft_id" class="form-select" required>
+                                {% for ac in fleet %}
+                                    <option value="{{ ac.aircraft_id }}">{{ ac.aircraft_name }} ({{ ac.total_seats }} seats)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Origin Airport</label>
+                            <select name="source_airport_id" class="form-select" required>
+                                {% for ap in airports %}
+                                    <option value="{{ ap.airport_id }}">{{ ap.city }} ({{ ap.airport_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Destination Airport</label>
+                            <select name="destination_airport_id" class="form-select" required>
+                                {% for ap in airports %}
+                                    <option value="{{ ap.airport_id }}">{{ ap.city }} ({{ ap.airport_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Travel Date</label>
+                            <input type="date" name="travel_date" class="form-control" value="2026-10-25" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Departure Time</label>
+                            <input type="time" name="departure_time" class="form-control" value="08:00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Arrival Time</label>
+                            <input type="time" name="arrival_time" class="form-control" value="10:15" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Base Ticket Price (INR)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" step="50" min="500" name="base_price" class="form-control" value="4500.00" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Save Flight</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Passenger Bookings Management | Admin | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Manage flights. Manage bookings. Keep journeys moving." %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0">Passenger Reservations Management</h2>
+            <p class="text-muted small mb-0">Search, filter, inspect PNR records, and perform administrative cancellations.</p>
+        </div>
+    </div>
+
+    <!-- Navigation Pills -->
+    <div class="d-flex gap-2 mb-4 border-bottom pb-3 flex-wrap">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">Overview</a>
+        <a href="{{ url_for('admin.manage_flights') }}" class="btn btn-outline-secondary btn-sm">Flight Schedules</a>
+        <a href="{{ url_for('admin.manage_aircraft') }}" class="btn btn-outline-secondary btn-sm">Fleet &amp; Seats</a>
+        <a href="{{ url_for('admin.overbooking_policy') }}" class="btn btn-outline-secondary btn-sm">Overbooking Policy</a>
+        <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-dark btn-sm">All Bookings</a>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary btn-sm">Passengers</a>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card shadow-sm border-0 rounded-4 p-3 bg-white mb-4">
+        <form action="{{ url_for('admin.manage_bookings') }}" method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search by PNR, passenger name, or email..." value="{{ search_q }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="btn-group btn-group-sm w-100" role="group">
+                    <a href="{{ url_for('admin.manage_bookings', q=search_q) }}" class="btn {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+                    <a href="{{ url_for('admin.manage_bookings', status='CONFIRMED', q=search_q) }}" class="btn {% if status_filter == 'CONFIRMED' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Confirmed</a>
+                    <a href="{{ url_for('admin.manage_bookings', status='WAITLISTED', q=search_q) }}" class="btn {% if status_filter == 'WAITLISTED' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Waitlisted</a>
+                    <a href="{{ url_for('admin.manage_bookings', status='CANCELLED', q=search_q) }}" class="btn {% if status_filter == 'CANCELLED' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Cancelled</a>
+                </div>
+            </div>
+            <div class="col-md-3 text-end">
+                <button type="submit" class="btn btn-primary btn-sm px-3">Filter Results</button>
+                <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bookings Table -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>PNR</th>
+                        <th>Passenger</th>
+                        <th>Flight</th>
+                        <th>Route</th>
+                        <th>Seat</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Booking Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary">{{ b.pnr }}</td>
+                            <td>
+                                <strong class="d-block">{{ b.passenger_name }}</strong>
+                                <span class="very-small text-muted">{{ b.passenger_email }} &bull; {{ b.passenger_phone }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ b.flight_number }}</span>
+                                <div class="very-small text-muted">{{ b.travel_date }}</div>
+                            </td>
+                            <td>{{ b.source_code }} &rarr; {{ b.dest_code }}</td>
+                            <td>
+                                {% if b.seat_number %}
+                                    <span class="badge bg-dark">{{ b.seat_number }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">WL #{{ b.waitlist_position|default(1) }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold text-success">₹{{ "{:,.2f}".format(b.total_amount) }}</td>
+                            <td>
+                                {% if b.status == 'CONFIRMED' %}
+                                    <span class="badge bg-success-subtle text-success">CONFIRMED</span>
+                                {% elif b.status == 'WAITLISTED' %}
+                                    <span class="badge bg-warning-subtle text-warning">WAITLISTED</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">CANCELLED</span>
+                                {% endif %}
+                            </td>
+                            <td class="very-small text-muted">{{ b.booking_date }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ url_for('booking.confirmation', pnr=b.pnr) }}" class="btn btn-outline-primary btn-sm py-0" title="View Boarding Pass">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if b.status in ('CONFIRMED', 'WAITLISTED') %}
+                                        <form action="{{ url_for('admin.admin_cancel_booking', booking_id=b.booking_id) }}" method="POST"
+                                              onsubmit="return confirm('Cancel reservation {{ b.pnr }}? Seat will be reclaimed and waitlist promoted.');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm py-0" title="Cancel Booking">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="9" class="text-center text-muted py-4">No reservations match the selected query.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

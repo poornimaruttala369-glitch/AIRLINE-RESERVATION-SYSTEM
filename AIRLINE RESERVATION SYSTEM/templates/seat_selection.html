@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Select Your Seat | Flight {{ flight.flight_number }} | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Choose your seat. Travel your way." %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Flight Header Bar -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 bg-white">
+        <div class="row align-items-center g-3">
+            <div class="col-md-6">
+                <span class="badge bg-primary px-3 py-1 mb-2">Flight {{ flight.flight_number }}</span>
+                <h3 class="fw-bold mb-1">{{ flight.source_city }} ({{ flight.source_code }}) &rarr; {{ flight.dest_city }} ({{ flight.dest_code }})</h3>
+                <div class="text-muted small">
+                    <i class="bi bi-calendar3 me-1"></i> {{ flight.travel_date }} &bull; 
+                    <i class="bi bi-clock me-1"></i> {{ flight.formatted_dep_time }} - {{ flight.formatted_arr_time }} ({{ flight.duration_display }}) &bull; 
+                    <i class="bi bi-airplane me-1"></i> {{ flight.aircraft_name }}
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-inline-flex gap-3 align-items-center p-3 bg-light rounded-3">
+                    <div class="text-center">
+                        <span class="d-block small text-muted">Physical Capacity</span>
+                        <strong class="fs-5 text-dark">{{ total_seats }}</strong>
+                    </div>
+                    <div class="border-start ps-3 text-center">
+                        <span class="d-block small text-muted">Available</span>
+                        <strong class="fs-5 text-success">{{ available_count }}</strong>
+                    </div>
+                    <div class="border-start ps-3 text-center">
+                        <span class="d-block small text-muted">Booked</span>
+                        <strong class="fs-5 text-muted">{{ booked_count }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seat Map Row -->
+    <div class="row g-4 justify-content-center">
+        <!-- Visual Aircraft Fuselage Cabin -->
+        <div class="col-lg-7">
+            <div class="cabin-fuselage">
+                <!-- Cockpit Indicator (Aircraft Front) -->
+                <div class="cockpit-indicator">
+                    <i class="bi bi-compass me-1"></i> AIRCRAFT FRONT (COCKPIT)
+                </div>
+
+                <!-- Seat Map Legend -->
+                <div class="d-flex justify-content-around flex-wrap mb-4 pb-3 border-bottom small text-muted">
+                    <div class="d-flex align-items-center me-2 mb-2">
+                        <div class="seat-btn me-2" style="width:24px; height:26px; font-size:10px;"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="d-flex align-items-center me-2 mb-2">
+                        <div class="seat-btn seat-selected me-2" style="width:24px; height:26px; font-size:10px;"></div>
+                        <span>Selected</span>
+                    </div>
+                    <div class="d-flex align-items-center me-2 mb-2">
+                        <div class="seat-btn seat-booked me-2" style="width:24px; height:26px; font-size:10px;">✕</div>
+                        <span>Occupied</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="seat-btn seat-business me-2" style="width:24px; height:26px; font-size:10px;">★</div>
+                        <span>Business</span>
+                    </div>
+                </div>
+
+                <!-- Cabin Rows -->
+                <div class="cabin-seating-area">
+                    {% for row_num, seats in cabin_matrix %}
+                        <div class="cabin-row">
+                            <!-- Row Number -->
+                            <div class="cabin-row-number">{{ row_num }}</div>
+
+                            <!-- Left Group (e.g. A, B, C or A, B) -->
+                            <div class="seat-col-group">
+                                {% for seat in seats %}
+                                    {% if loop.index <= (seats|length // 2) %}
+                                        <button type="button" 
+                                                class="seat-btn {% if seat.is_booked() %}seat-booked{% endif %} {% if seat.seat_class == 'BUSINESS' %}seat-business{% endif %}"
+                                                data-seat-id="{{ seat.seat_id }}"
+                                                data-seat-number="{{ seat.seat_number }}"
+                                                data-seat-class="{{ seat.seat_class }}"
+                                                data-seat-price="{{ flight.base_price * 1.2 if seat.seat_class == 'BUSINESS' else flight.base_price }}"
+                                                {% if seat.is_booked() %}disabled title="Seat {{ seat.seat_number }} is already booked"{% else %}title="Select Seat {{ seat.seat_number }} ({{ seat.seat_class }})"{% endif %}>
+                                            {{ seat.seat_number }}
+                                        </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            <!-- Aisle Space -->
+                            <div class="cabin-aisle">
+                                <i class="bi bi-chevron-bar-expand"></i>
+                            </div>
+
+                            <!-- Right Group (e.g. D, E, F or C, D) -->
+                            <div class="seat-col-group">
+                                {% for seat in seats %}
+                                    {% if loop.index > (seats|length // 2) %}
+                                        <button type="button" 
+                                                class="seat-btn {% if seat.is_booked() %}seat-booked{% endif %} {% if seat.seat_class == 'BUSINESS' %}seat-business{% endif %}"
+                                                data-seat-id="{{ seat.seat_id }}"
+                                                data-seat-number="{{ seat.seat_number }}"
+                                                data-seat-class="{{ seat.seat_class }}"
+                                                data-seat-price="{{ flight.base_price * 1.2 if seat.seat_class == 'BUSINESS' else flight.base_price }}"
+                                                {% if seat.is_booked() %}disabled title="Seat {{ seat.seat_number }} is already booked"{% else %}title="Select Seat {{ seat.seat_number }} ({{ seat.seat_class }})"{% endif %}>
+                                            {{ seat.seat_number }}
+                                        </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-4 pt-3 border-top text-muted small">
+                    <i class="bi bi-door-closed me-1"></i> Aircraft Rear &bull; Galley &bull; Emergency Exits
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection Summary & Proceed Sidebar -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
+                <h4 class="fw-bold mb-3">Reservation Summary</h4>
+                
+                <div class="p-3 bg-light rounded-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Flight:</span>
+                        <strong class="font-monospace text-primary">{{ flight.flight_number }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Route:</span>
+                        <strong>{{ flight.source_code }} &rarr; {{ flight.dest_code }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Date:</span>
+                        <strong>{{ flight.travel_date }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Departure:</span>
+                        <strong>{{ flight.formatted_dep_time }}</strong>
+                    </div>
+                </div>
+
+                <!-- Live Selected Seat Display -->
+                <div class="border rounded-3 p-3 mb-4 border-primary border-opacity-50" id="selectionCard">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Selected Seat:</span>
+                        <span class="badge bg-primary fs-6 px-3 py-1" id="displaySeatNum">None</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">Class:</span>
+                        <span class="fw-semibold" id="displaySeatClass">-</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
+                        <span class="fw-bold">Fare:</span>
+                        <span class="fw-bold text-success fs-5" id="displaySeatFare">₹0.00</span>
+                    </div>
+                </div>
+
+                {% if is_waitlist_eligible %}
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-info-circle me-1"></i> All physical seats are occupied. This booking will be registered as <strong>WAITLISTED</strong> under the configured overbooking policy.
+                    </div>
+                {% endif %}
+
+                <!-- Form to Proceed to Checkout -->
+                <form action="{{ url_for('booking.checkout') }}" method="POST" id="seatSelectionForm">
+                    <input type="hidden" name="flight_id" value="{{ flight.flight_id }}">
+                    <input type="hidden" name="seat_id" id="hiddenSeatId" value="">
+
+                    <button type="submit" id="btnProceedCheckout" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm" disabled>
+                        Proceed to Passenger Details &rarr;
+                    </button>
+                </form>
+
+                <div class="text-center text-muted very-small mt-3">
+                    <i class="bi bi-shield-check me-1 text-success"></i> Real-time collision protection active
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const seatButtons = document.querySelectorAll('.seat-btn:not(.seat-booked)');
+    const hiddenSeatId = document.getElementById('hiddenSeatId');
+    const displaySeatNum = document.getElementById('displaySeatNum');
+    const displaySeatClass = document.getElementById('displaySeatClass');
+    const displaySeatFare = document.getElementById('displaySeatFare');
+    const btnProceedCheckout = document.getElementById('btnProceedCheckout');
+
+    seatButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Deselect previous
+            seatButtons.forEach(b => b.classList.remove('seat-selected'));
+            
+            // Select current
+            btn.classList.add('seat-selected');
+
+            const seatId = btn.getAttribute('data-seat-id');
+            const seatNumber = btn.getAttribute('data-seat-number');
+            const seatClass = btn.getAttribute('data-seat-class');
+            const price = parseFloat(btn.getAttribute('data-seat-price'));
+
+            // Update UI elements
+            hiddenSeatId.value = seatId;
+            displaySeatNum.textContent = seatNumber;
+            displaySeatClass.textContent = seatClass;
+            displaySeatFare.textContent = `₹${price.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+            // Enable submit button
+            btnProceedCheckout.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

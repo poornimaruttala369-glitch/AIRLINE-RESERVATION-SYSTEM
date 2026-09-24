@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}About & Academic Architecture | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Bridging theory and practice in software engineering." %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-2">College Project (AIDS - 2nd Year)</span>
+        <h1 class="fw-bold">✈️ Airline Reservation System Architecture</h1>
+        <p class="text-muted lead mx-auto" style="max-width: 720px;">
+            A real-world full-stack web application designed to demonstrate the convergence of Database Systems, Discrete Mathematics, Data Structures, and Object-Oriented Programming.
+        </p>
+    </div>
+
+    <!-- Core Problems Solved -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card h-100 p-4 border-primary border-opacity-50 shadow-sm">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="feature-icon-box bg-primary-subtle text-primary me-3 mb-0">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">1. Double-Booking Prevention</h4>
+                        <span class="badge bg-success-subtle text-success">Zero Seat Collision Guarantee</span>
+                    </div>
+                </div>
+                <p class="text-muted mb-2">
+                    In traditional web systems, concurrent requests can read the same seat as available and book it simultaneously (Race Condition).
+                </p>
+                <div class="bg-light p-3 rounded small">
+                    <strong>Solution:</strong> 4-tier defense architecture:
+                    <ul class="mb-0 mt-1">
+                        <li><strong>Frontend:</strong> Real-time visual seat map showing occupied seats as disabled.</li>
+                        <li><strong>Backend:</strong> Availability pre-check before processing payment/booking.</li>
+                        <li><strong>Transaction Isolation:</strong> Explicit database row-level locking (<code>SELECT ... FOR UPDATE</code>) within ACID transaction boundaries.</li>
+                        <li><strong>Database Unique Index:</strong> A virtual generated index on <code>(flight_id, active_seat_flag)</code> where only active bookings hold a non-null seat flag. Even in sudden simultaneous execution, MySQL strictly rejects duplicate active allocations with error 1062, triggering automatic rollback.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 p-4 border-warning border-opacity-50 shadow-sm">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="feature-icon-box bg-warning-subtle text-warning me-3 mb-0">
+                        <i class="bi bi-sliders"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">2. Configurable Overbooking Policy</h4>
+                        <span class="badge bg-warning-subtle text-warning">Dynamic Capacity Management</span>
+                    </div>
+                </div>
+                <p class="text-muted mb-2">
+                    Commercial airlines expect a 5-10% historical passenger no-show rate. Uncontrolled overbooking causes denied boarding; zero overbooking causes empty seats.
+                </p>
+                <div class="bg-light p-3 rounded small">
+                    <strong>Solution:</strong> Configurable percentage formula:
+                    <div class="my-2 p-2 bg-white border rounded font-monospace text-center">
+                        C<sub>max</sub> = &lfloor; C<sub>phys</sub> &times; (1 + p<sub>over</sub> / 100) &rfloor;
+                    </div>
+                    <ul class="mb-0">
+                        <li><strong>Confirmed:</strong> Physical seat allocated while active bookings &lt; C<sub>phys</sub>.</li>
+                        <li><strong>Waitlisted:</strong> Active bookings reach C<sub>phys</sub> but remain &le; C<sub>max</sub>. FIFO queue position assigned.</li>
+                        <li><strong>Automatic Promotion:</strong> When a confirmed booking is cancelled, the earliest waitlisted passenger is automatically promoted to confirmed status and assigned the freed seat.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Subjects Matrix -->
+    <h3 class="fw-bold mb-4 text-center">Academic Curriculum Representation</h3>
+    <div class="table-responsive shadow-sm rounded-4 mb-5">
+        <table class="table table-hover align-middle mb-0 bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 15%;">Subject</th>
+                    <th style="width: 25%;">Syllabus Concepts</th>
+                    <th style="width: 60%;">Practical Realization in this System</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold text-primary"><i class="bi bi-database me-1"></i> DBMS</td>
+                    <td>Normalization (3NF), ACID Transactions, Foreign Keys, Unique Constraints, Row Locking</td>
+                    <td>
+                        8 normalized relational tables. Strict referential integrity preventing orphan records. Pessimistic concurrency control with <code>BEGIN TRANSACTION</code>, <code>COMMIT</code>, and <code>ROLLBACK</code>.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold text-success"><i class="bi bi-diagram-3 me-1"></i> DMGT</td>
+                    <td>Sets, Cartesian Products, Relations, Graph Theory (Vertices &amp; Edges)</td>
+                    <td>
+                        Air network modeled as a directed graph \( G = (V, E) \) where airports are vertices and flight routes are edges. Relational mappings between Passenger, Booking, Flight, and Seat sets.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold text-warning"><i class="bi bi-cpu me-1"></i> ADSA</td>
+                    <td>Searching, Sorting Algorithms, Time Complexity, FIFO Queues, Hash Maps</td>
+                    <td>
+                        Custom multi-parameter flight sorting (Price, Time, Seat Availability) with \( O(N \log N) \) complexity. Fast \( O(1) \) hash map lookup for seat state. FIFO Priority Queue for waitlist promotion.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold text-info"><i class="bi bi-braces me-1"></i> OOPJ</td>
+                    <td>Classes, Inheritance, Encapsulation, Polymorphism, Constructors</td>
+                    <td>
+                        Python domain hierarchy: Base <code>User</code> inherited by <code>Passenger</code> and <code>Admin</code>. Encapsulated methods for capacity computation and cancellation permission validation.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold text-danger"><i class="bi bi-code-slash me-1"></i> Web &amp; Python</td>
+                    <td>Flask Framework, MVC Pattern, Blueprints, Jinja2 Templates, Secure Hashing</td>
+                    <td>
+                        Modular Blueprints (<code>auth</code>, <code>flights</code>, <code>booking</code>, <code>admin</code>), PBKDF2/Scrypt cryptographic password hashing, responsive CSS3/HTML5 UI with zero excessive dependencies.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Student Credentials & Viva Reference -->
+    <div class="card p-4 bg-light border-0 shadow-sm rounded-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-mortarboard me-2 text-primary"></i>Viva Quick Reference &amp; Demo Credentials</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 bg-white border rounded">
+                    <span class="badge bg-danger mb-2">Administrator Account</span>
+                    <div><strong>Email:</strong> <code>admin@airline.com</code></div>
+                    <div><strong>Password:</strong> <code>Admin@123</code></div>
+                    <div class="text-muted small mt-1">Capabilities: Manage flights, view all bookings, adjust overbooking %.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-white border rounded">
+                    <span class="badge bg-primary mb-2">Sample Passenger Account</span>
+                    <div><strong>Email:</strong> <code>poornima@example.com</code></div>
+                    <div><strong>Password:</strong> <code>Pass@123</code></div>
+                    <div class="text-muted small mt-1">Capabilities: Book seats, test double-booking rejection, cancel bookings.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

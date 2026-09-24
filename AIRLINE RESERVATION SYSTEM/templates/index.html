@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Book Your Journey | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Fly Smart. Book Easy. Travel Confidently." %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <span class="badge bg-white bg-opacity-25 text-white px-3 py-2 rounded-pill mb-3 fw-semibold">
+                    <i class="bi bi-shield-check me-1"></i> Certified Double-Booking Prevention & Smart Overbooking
+                </span>
+                <h1 class="hero-title mb-3">Book Your Journey</h1>
+                <p class="hero-subtitle mb-4">Travel safely. Fly comfortably.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search Flights Card (Floating over hero) -->
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="hero-search-card">
+                <form action="{{ url_for('flights.search') }}" method="GET" class="row g-3 align-items-end">
+                    <!-- Source Airport -->
+                    <div class="col-md-4">
+                        <label for="from_airport" class="form-label fw-bold text-muted small text-uppercase">
+                            <i class="bi bi-geo-alt me-1 text-primary"></i> From (Departure)
+                        </label>
+                        <select class="form-select form-select-lg" id="from_airport" name="from_airport" required>
+                            <option value="" disabled selected>Select Origin City</option>
+                            {% for airport in airports %}
+                                <option value="{{ airport.airport_code }}" {% if request.args.get('from_airport') == airport.airport_code %}selected{% endif %}>
+                                    {{ airport.city }} ({{ airport.airport_code }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Destination Airport -->
+                    <div class="col-md-4">
+                        <label for="to_airport" class="form-label fw-bold text-muted small text-uppercase">
+                            <i class="bi bi-geo me-1 text-primary"></i> To (Arrival)
+                        </label>
+                        <select class="form-select form-select-lg" id="to_airport" name="to_airport" required>
+                            <option value="" disabled selected>Select Destination City</option>
+                            {% for airport in airports %}
+                                <option value="{{ airport.airport_code }}" {% if request.args.get('to_airport') == airport.airport_code %}selected{% endif %}>
+                                    {{ airport.city }} ({{ airport.airport_code }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Travel Date -->
+                    <div class="col-md-4">
+                        <label for="travel_date" class="form-label fw-bold text-muted small text-uppercase">
+                            <i class="bi bi-calendar3 me-1 text-primary"></i> Travel Date
+                        </label>
+                        <input type="date" class="form-control form-select-lg" id="travel_date" name="travel_date" 
+                               value="{{ request.args.get('travel_date', '2026-10-25') }}" required>
+                    </div>
+
+                    <!-- Search Button -->
+                    <div class="col-12 mt-4 text-center">
+                        <button type="submit" class="btn btn-primary btn-lg px-5 py-3 fw-bold rounded-pill shadow-sm">
+                            <i class="bi bi-search me-2"></i> Search Flights
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Why Choose Us? Section (Section 9 Requirement) -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-2">Why Choose Us?</h2>
+            <p class="text-muted">Designed with precision engineering to ensure seamless, reliable air travel.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- 1. Easy Booking -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon-box bg-primary-subtle text-primary">
+                        <i class="bi bi-cursor-fill"></i>
+                    </div>
+                    <h5 class="fw-bold">Easy Booking</h5>
+                    <p class="text-muted small mb-0">
+                        Intuitive 3-step booking flow: Search flight, select your exact aircraft seat, and confirm in seconds.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 2. Real-time Seat Availability -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon-box bg-info-subtle text-info">
+                        <i class="bi bi-grid-3x3"></i>
+                    </div>
+                    <h5 class="fw-bold">Real-time Seat Availability</h5>
+                    <p class="text-muted small mb-0">
+                        Interactive aircraft cabin map with clear visual indicators for available, booked, and business seats.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 3. No Double Booking -->
+            <div class="col-md-4">
+                <div class="feature-card border-primary border-opacity-25">
+                    <div class="feature-icon-box bg-success-subtle text-success">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h5 class="fw-bold">No Double Booking</h5>
+                    <p class="text-muted small mb-0">
+                        Guaranteed by database ACID transactions and unique composite constraints. Concurrent booking attempts are safely rejected.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 4. Consistent Overbooking Policy -->
+            <div class="col-md-4">
+                <div class="feature-card border-warning border-opacity-25">
+                    <div class="feature-icon-box bg-warning-subtle text-warning">
+                        <i class="bi bi-sliders2"></i>
+                    </div>
+                    <h5 class="fw-bold">Consistent Overbooking Policy</h5>
+                    <p class="text-muted small mb-0">
+                        Configurable overbooking limits manage no-show probability, seamlessly maintaining FIFO waitlists.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 5. Easy Cancellation -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon-box bg-danger-subtle text-danger">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </div>
+                    <h5 class="fw-bold">Easy Cancellation</h5>
+                    <p class="text-muted small mb-0">
+                        Cancel eligible trips with one click. Seats are automatically released and allocated to the next waitlisted passenger.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 6. Secure Reservations -->
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon-box bg-secondary-subtle text-dark">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure Reservations</h5>
+                    <p class="text-muted small mb-0">
+                        Every reservation receives a cryptographically safe, unique 7-character PNR code for instant lookup.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Route Network Highlights (Graph Theory Demonstration) -->
+<section class="py-5 bg-white border-top border-bottom">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <span class="badge bg-primary-subtle text-primary mb-2">Discrete Mathematics (DMGT)</span>
+                <h3 class="fw-bold">Nationwide Air Network Graph</h3>
+                <p class="text-muted">
+                    Our interconnected flight network is modeled as a connected graph \( G = (V, E) \), where metro airports represent vertices and scheduled flights form directed weighted edges.
+                </p>
+                <div class="d-flex gap-3 mt-3">
+                    <div class="border rounded p-3 text-center flex-fill">
+                        <div class="fs-4 fw-bold text-primary">6</div>
+                        <div class="text-muted small">Metro Hubs (Vertices)</div>
+                    </div>
+                    <div class="border rounded p-3 text-center flex-fill">
+                        <div class="fs-4 fw-bold text-success">8+</div>
+                        <div class="text-muted small">Daily Flights (Edges)</div>
+                    </div>
+                    <div class="border rounded p-3 text-center flex-fill">
+                        <div class="fs-4 fw-bold text-warning">100%</div>
+                        <div class="text-muted small">ACID Protected</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <div class="p-4 bg-light rounded-4 border">
+                    <h6 class="fw-bold text-muted text-uppercase mb-3">Popular Daily Routes</h6>
+                    <div class="list-group list-group-flush text-start">
+                        <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <span><strong>HYD</strong> (Hyderabad) &rarr; <strong>DEL</strong> (Delhi)</span>
+                            <span class="badge bg-primary rounded-pill">Flight AR101</span>
+                        </div>
+                        <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <span><strong>BOM</strong> (Mumbai) &rarr; <strong>BLR</strong> (Bengaluru)</span>
+                            <span class="badge bg-primary rounded-pill">Flight AR201</span>
+                        </div>
+                        <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                            <span><strong>HYD</strong> (Hyderabad) &rarr; <strong>MAA</strong> (Chennai)</span>
+                            <span class="badge bg-primary rounded-pill">Flight AR301</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('flights.search') }}" class="btn btn-outline-primary btn-sm mt-3 w-100">
+                        View All Available Schedules &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

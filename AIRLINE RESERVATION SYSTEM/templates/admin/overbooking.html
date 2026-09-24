@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Overbooking Policy & Waitlist Queue | Admin | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Manage flights. Manage bookings. Keep journeys moving." %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <span class="badge bg-warning text-dark px-3 py-1 mb-1 fw-bold">
+                <i class="bi bi-sliders2 me-1"></i> Core Academic Feature
+            </span>
+            <h2 class="fw-bold mb-0">Overbooking Policy &amp; Waitlist Queue</h2>
+            <p class="text-muted small mb-0">Mathematically regulate passenger capacity limits and monitor active waitlists.</p>
+        </div>
+    </div>
+
+    <!-- Navigation Pills -->
+    <div class="d-flex gap-2 mb-4 border-bottom pb-3 flex-wrap">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">Overview</a>
+        <a href="{{ url_for('admin.manage_flights') }}" class="btn btn-outline-secondary btn-sm">Flight Schedules</a>
+        <a href="{{ url_for('admin.manage_aircraft') }}" class="btn btn-outline-secondary btn-sm">Fleet &amp; Seats</a>
+        <a href="{{ url_for('admin.overbooking_policy') }}" class="btn btn-dark btn-sm">Overbooking Policy</a>
+        <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline-secondary btn-sm">All Bookings</a>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary btn-sm">Passengers</a>
+    </div>
+
+    <!-- Academic Theory Box -->
+    <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h5 class="fw-bold text-dark"><i class="bi bi-calculator me-2 text-primary"></i>Overbooking Policy Formula &amp; Rules</h5>
+                <p class="text-muted small mb-2">
+                    Airlines anticipate statistical passenger no-shows. The system strictly differentiates between <strong>Physical Seat Capacity</strong> (\( C_{phys} \)) and <strong>Maximum Booking Capacity</strong> (\( C_{max} \)).
+                </p>
+                <div class="font-monospace small bg-white p-2 rounded border d-inline-block">
+                    C<sub>max</sub> = &lfloor; C<sub>phys</sub> &times; (1 + Overbooking_Percentage / 100) &rfloor;
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <span class="badge bg-success-subtle text-success border px-3 py-2">
+                    <i class="bi bi-shield-check me-1"></i> Never Exceeds Configured C<sub>max</sub>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Fleet Policy Configuration Table -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3">Fleet Overbooking Settings</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Aircraft</th>
+                                <th>Physical (C<sub>phys</sub>)</th>
+                                <th>Overbook %</th>
+                                <th>Max Cap (C<sub>max</sub>)</th>
+                                <th>Update Policy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in policies %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ p.aircraft_name }}</strong>
+                                        <div class="very-small text-muted">{{ p.model_number }}</div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border fs-6">{{ p.total_seats }}</span></td>
+                                    <td><span class="badge bg-warning-subtle text-warning fs-6">{{ p.overbooking_percentage }}%</span></td>
+                                    <td><strong class="text-primary fs-6">{{ p.max_allowed_capacity }}</strong></td>
+                                    <td>
+                                        <form action="{{ url_for('admin.overbooking_policy') }}" method="POST" class="d-flex gap-2">
+                                            <input type="hidden" name="aircraft_id" value="{{ p.aircraft_id }}">
+                                            <input type="number" step="0.5" min="0" max="50" name="overbooking_percentage" 
+                                                   value="{{ p.overbooking_percentage }}" class="form-control form-control-sm" style="width: 80px;" required>
+                                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                Save
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waitlist Queue Monitoring (FIFO) -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Active Waitlist Queue (FIFO)</h5>
+                    <span class="badge bg-warning text-dark">{{ waitlist|length }} In Queue</span>
+                </div>
+                <p class="text-muted very-small mb-3">
+                    Passengers in this queue are automatically promoted to <strong>CONFIRMED</strong> as soon as an existing passenger cancels!
+                </p>
+
+                <div class="list-group list-group-flush">
+                    {% for w in waitlist %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-warning text-dark font-monospace">Priority #{{ w.waitlist_position }}</span>
+                                <span class="font-monospace text-primary fw-bold">{{ w.pnr }}</span>
+                            </div>
+                            <div class="fw-bold text-dark">{{ w.passenger_name }}</div>
+                            <div class="very-small text-muted">
+                                Flight: <strong>{{ w.flight_number }}</strong> ({{ w.source_city }} &rarr; {{ w.dest_city }}) &bull; {{ w.travel_date }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4 small">
+                            <i class="bi bi-check2-circle text-success fs-3 d-block mb-1"></i>
+                            No waitlisted passengers currently queued.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

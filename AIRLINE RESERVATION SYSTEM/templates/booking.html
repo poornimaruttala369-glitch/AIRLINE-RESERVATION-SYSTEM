@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Passenger Details & Checkout | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Secure your reservation in a few simple steps." %}
+
+{% block content %}
+<div class="container py-4 my-2">
+    <div class="row justify-content-center g-4">
+        <!-- Passenger Input Form -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 bg-white">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="feature-icon-box bg-primary-subtle text-primary me-3 mb-0">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0">Passenger Information</h3>
+                        <p class="text-muted small mb-0">Enter details as shown on government issued photo identification.</p>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('booking.confirm') }}" method="POST" id="bookingForm">
+                    <input type="hidden" name="flight_id" value="{{ flight.flight_id }}">
+                    <input type="hidden" name="seat_id" value="{{ seat.seat_id }}">
+
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label for="passenger_name" class="form-label fw-semibold small text-muted text-uppercase">Primary Passenger Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person text-muted"></i></span>
+                            <input type="text" class="form-control" id="passenger_name" name="passenger_name" 
+                                   value="{{ current_user.name if current_user else '' }}" placeholder="First & Last Name" required>
+                        </div>
+                    </div>
+
+                    <!-- Email & Phone -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="passenger_email" class="form-label fw-semibold small text-muted text-uppercase">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope text-muted"></i></span>
+                                <input type="email" class="form-control" id="passenger_email" name="passenger_email" 
+                                       value="{{ current_user.email if current_user else '' }}" placeholder="For e-ticket confirmation" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="passenger_phone" class="form-label fw-semibold small text-muted text-uppercase">Contact Mobile</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-telephone text-muted"></i></span>
+                                <input type="tel" class="form-control" id="passenger_phone" name="passenger_phone" 
+                                       value="{{ current_user.phone if current_user else '' }}" placeholder="10-digit mobile" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demonstration Payment Card (Section 39 Requirement: No real payment gateway) -->
+                    <div class="card p-3 border rounded-3 bg-light mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold small text-muted text-uppercase"><i class="bi bi-credit-card me-1"></i> Payment Settlement</span>
+                            <span class="badge bg-info-subtle text-info border">Academic Simulation</span>
+                        </div>
+                        <p class="very-small text-muted mb-2">
+                            This is an academic college project. No real financial charges will take place. An automated demonstration payment transaction will be logged with status <strong>PAID</strong>.
+                        </p>
+                        <div class="d-flex gap-2">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payCard" value="DEMO_CARD" checked>
+                                <label class="form-check-label small" for="payCard">Demo Airline Card</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payUPI" value="DEMO_UPI">
+                                <label class="form-check-label small" for="payUPI">Demo UPI</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg fw-bold rounded-pill shadow-sm py-3">
+                            <i class="bi bi-lock-fill me-1"></i> Complete Booking &amp; Generate PNR
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Flight & Fare Review Summary -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                <h4 class="fw-bold mb-3">Booking Review</h4>
+
+                <div class="border rounded-3 p-3 bg-light mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-primary">{{ flight.flight_number }}</span>
+                        <span class="text-muted small">{{ flight.travel_date }}</span>
+                    </div>
+                    <div class="fw-bold fs-5 mb-1">
+                        {{ flight.source_city }} &rarr; {{ flight.dest_city }}
+                    </div>
+                    <div class="text-muted small">
+                        Departure: <strong>{{ flight.departure_time }}</strong> &bull; Arrival: <strong>{{ flight.arrival_time }}</strong>
+                    </div>
+                </div>
+
+                <!-- Seat & Fare details -->
+                <div class="list-group list-group-flush mb-4">
+                    <div class="list-group-item d-flex justify-content-between px-0 bg-transparent">
+                        <span class="text-muted">Selected Seat</span>
+                        <strong class="badge bg-dark fs-6 px-3">{{ seat.seat_number }}</strong>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between px-0 bg-transparent">
+                        <span class="text-muted">Cabin Class</span>
+                        <span class="fw-semibold">{{ seat.seat_class }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between px-0 bg-transparent">
+                        <span class="text-muted">Base Fare</span>
+                        <span>₹{{ "{:,.2f}".format(flight.base_price) }}</span>
+                    </div>
+                    {% if seat.seat_class == 'BUSINESS' %}
+                        <div class="list-group-item d-flex justify-content-between px-0 bg-transparent text-primary">
+                            <span>Business Class Premium (+20%)</span>
+                            <span>+ ₹{{ "{:,.2f}".format(flight.base_price * 0.20) }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="list-group-item d-flex justify-content-between px-0 bg-transparent border-top pt-3">
+                        <span class="fs-5 fw-bold">Total Amount Due</span>
+                        <span class="fs-4 fw-bold text-success">₹{{ "{:,.2f}".format(final_price) }}</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info very-small mb-0">
+                    <i class="bi bi-info-circle-fill me-1"></i> <strong>ACID Guarantee:</strong> Upon clicking confirm, a database transaction with pessimistic locking will secure your seat and prevent concurrent duplicate bookings.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

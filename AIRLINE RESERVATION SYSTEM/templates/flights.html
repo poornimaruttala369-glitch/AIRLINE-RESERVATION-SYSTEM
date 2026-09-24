@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if has_searched %}Flight Results | {{ app_name }}{% else %}Search Flights | {{ app_name }}{% endif %}
+{% endblock %}
+
+
+{% set corner_subtext = "Choose the flight that fits your journey." if has_searched else "Find your flight. Plan your journey." %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Search Refinement Card -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 bg-white">
+        <form action="{{ url_for('flights.search') }}" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="from_airport" class="form-label small fw-bold text-muted text-uppercase">From</label>
+                <select class="form-select" id="from_airport" name="from_airport" required>
+                    <option value="" disabled>Select Origin</option>
+                    {% for airport in airports %}
+                        <option value="{{ airport.airport_code }}" {% if from_code == airport.airport_code %}selected{% endif %}>
+                            {{ airport.city }} ({{ airport.airport_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="to_airport" class="form-label small fw-bold text-muted text-uppercase">To</label>
+                <select class="form-select" id="to_airport" name="to_airport" required>
+                    <option value="" disabled>Select Destination</option>
+                    {% for airport in airports %}
+                        <option value="{{ airport.airport_code }}" {% if to_code == airport.airport_code %}selected{% endif %}>
+                            {{ airport.city }} ({{ airport.airport_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="travel_date" class="form-label small fw-bold text-muted text-uppercase">Travel Date</label>
+                <input type="date" class="form-control" id="travel_date" name="travel_date" 
+                       value="{{ travel_date|default('2026-10-25') }}" required>
+            </div>
+
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                    <i class="bi bi-search me-1"></i> Update Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if has_searched %}
+        <!-- Search Results Header with ADSA Sorting Bar -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h3 class="fw-bold mb-1">
+                    {{ from_code }} &rarr; {{ to_code }}
+                </h3>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-calendar-event me-1"></i> {{ travel_date }} &bull; 
+                    <strong>{{ flights|length }}</strong> flight(s) found
+                </p>
+            </div>
+
+            <!-- ADSA Sorting Controls (Section 11 Requirement) -->
+            {% if flights %}
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small fw-semibold"><i class="bi bi-sort-down me-1"></i>Sort by:</span>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Sort options">
+                        <a href="{{ url_for('flights.search', from_airport=from_code, to_airport=to_code, travel_date=travel_date, sort='price', order='asc' if sort_by != 'price' or order == 'desc' else 'desc') }}" 
+                           class="btn {% if sort_by == 'price' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                            Price {% if sort_by == 'price' %}{{ '▲' if order == 'asc' else '▼' }}{% endif %}
+                        </a>
+                        <a href="{{ url_for('flights.search', from_airport=from_code, to_airport=to_code, travel_date=travel_date, sort='dep_time', order='asc' if sort_by != 'dep_time' or order == 'desc' else 'desc') }}" 
+                           class="btn {% if sort_by == 'dep_time' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                            Departure {% if sort_by == 'dep_time' %}{{ '▲' if order == 'asc' else '▼' }}{% endif %}
+                        </a>
+                        <a href="{{ url_for('flights.search', from_airport=from_code, to_airport=to_code, travel_date=travel_date, sort='arr_time', order='asc' if sort_by != 'arr_time' or order == 'desc' else 'desc') }}" 
+                           class="btn {% if sort_by == 'arr_time' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                            Arrival {% if sort_by == 'arr_time' %}{{ '▲' if order == 'asc' else '▼' }}{% endif %}
+                        </a>
+                        <a href="{{ url_for('flights.search', from_airport=from_code, to_airport=to_code, travel_date=travel_date, sort='seats', order='desc' if sort_by != 'seats' or order == 'asc' else 'asc') }}" 
+                           class="btn {% if sort_by == 'seats' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                            Seats {% if sort_by == 'seats' %}{{ '▼' if order == 'desc' else '▲' }}{% endif %}
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Flight Cards List -->
+        {% if flights %}
+            {% for flight in flights %}
+                <div class="flight-card shadow-sm">
+                    <div class="row align-items-center g-3">
+                        <!-- Flight Info & Aircraft -->
+                        <div class="col-md-2 text-center text-md-start">
+                            <span class="badge bg-light text-dark border px-2 py-1 mb-1">
+                                <i class="bi bi-airplane-engines me-1 text-primary"></i> {{ flight.flight_number }}
+                            </span>
+                            <div class="text-muted small fw-semibold">{{ flight.aircraft_name }}</div>
+                            <div class="badge bg-success-subtle text-success mt-1 small">Scheduled</div>
+                        </div>
+
+                        <!-- Schedule & Route Display -->
+                        <div class="col-md-5">
+                            <div class="row align-items-center text-center">
+                                <div class="col-4">
+                                    <div class="flight-route-time">{{ flight.formatted_dep_time }}</div>
+                                    <div class="flight-route-code">{{ flight.source_code }}</div>
+                                    <div class="flight-route-city">{{ flight.source_city }}</div>
+                                </div>
+                                <div class="col-4 route-arrow">
+                                    <div class="text-muted very-small">{{ flight.duration }}</div>
+                                    <div class="route-arrow-line">
+                                        <i class="bi bi-airplane-fill route-arrow-icon"></i>
+                                    </div>
+                                    <div class="text-success very-small fw-semibold">Non-stop</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="flight-route-time">{{ flight.formatted_arr_time }}</div>
+                                    <div class="flight-route-code">{{ flight.dest_code }}</div>
+                                    <div class="flight-route-city">{{ flight.dest_city }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seat Availability & Overbooking Status -->
+                        <div class="col-md-2 text-center">
+                            {% if flight.available_seats > 5 %}
+                                <span class="badge bg-success-subtle text-success fs-6 px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i> {{ flight.available_seats }} Seats Left
+                                </span>
+                            {% elif flight.available_seats > 0 %}
+                                <span class="badge bg-warning-subtle text-warning fs-6 px-3 py-2">
+                                    <i class="bi bi-exclamation-circle me-1"></i> Only {{ flight.available_seats }} Left!
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-danger fs-6 px-3 py-2">
+                                    <i class="bi bi-clock-history me-1"></i> Waitlist Only
+                                </span>
+                            {% endif %}
+                            <div class="text-muted very-small mt-1">Instant Allocation</div>
+                        </div>
+
+                        <!-- Price & Action Button -->
+                        <div class="col-md-3 text-center text-md-end">
+                            <div class="flight-price mb-2">{{ flight.formatted_price }}</div>
+                            <a href="{{ url_for('booking.select_seats', flight_id=flight.flight_id) }}" 
+                               class="btn btn-primary px-4 py-2 fw-bold rounded-pill shadow-sm">
+                                Select Flight <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Friendly No Flights Found message (Section 10 Requirement) -->
+            <div class="card p-5 text-center bg-white border-0 shadow-sm rounded-4 my-4">
+                <div class="fs-1 text-muted mb-3"><i class="bi bi-airplane"></i></div>
+                <h4 class="fw-bold">No Scheduled Flights Found</h4>
+                <p class="text-muted mx-auto" style="max-width: 480px;">
+                    We could not locate any flights operating between <strong>{{ from_code }}</strong> and <strong>{{ to_code }}</strong> on <strong>{{ travel_date }}</strong>.
+                </p>
+                <div class="mt-2">
+                    <span class="text-muted small d-block mb-3">Try searching for our daily flagship route: <strong>HYD &rarr; DEL</strong> on <strong>2026-10-25</strong>.</span>
+                    <a href="{{ url_for('flights.search', from_airport='HYD', to_airport='DEL', travel_date='2026-10-25') }}" class="btn btn-outline-primary px-4 py-2 rounded-pill">
+                        Search Sample Flight AR101 (HYD &rarr; DEL)
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

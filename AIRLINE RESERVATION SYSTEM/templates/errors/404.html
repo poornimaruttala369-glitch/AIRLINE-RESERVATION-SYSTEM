@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Not Found | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Destination not found. Let's redirect your flight." %}
+
+{% block content %}
+<div class="container text-center py-5 my-5">
+    <div class="error-card card p-5 shadow-sm mx-auto" style="max-width: 540px;">
+        <div class="display-1 text-primary mb-3">404</div>
+        <h2 class="h3 mb-3 font-weight-bold">Flight Path Lost (Page Not Found)</h2>
+        <p class="text-muted mb-4">
+            The destination runway or page you are trying to reach does not exist or has been rescheduled.
+        </p>
+        <div>
+            <a href="{{ url_for('flights.search') }}" class="btn btn-primary px-4 py-2 me-2">Search Flights</a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4 py-2">Return Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

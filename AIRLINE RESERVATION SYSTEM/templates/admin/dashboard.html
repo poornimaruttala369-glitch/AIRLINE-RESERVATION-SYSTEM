@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | {{ app_name }}{% endblock %}
+{% set corner_subtext = "Manage flights. Manage bookings. Keep journeys moving." %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Top Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <span class="badge bg-warning text-dark px-3 py-1 mb-1 fw-bold">
+                <i class="bi bi-shield-lock-fill me-1"></i> Operations Command
+            </span>
+            <h2 class="fw-bold mb-0">Airline Operations Dashboard</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.manage_flights') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-calendar-plus me-1"></i> Schedule Flight
+            </a>
+            <a href="{{ url_for('admin.overbooking_policy') }}" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-sliders me-1"></i> Overbooking Policy
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Cards Grid -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Flights -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted very-small text-uppercase fw-bold">Active Flights</span>
+                        <h3 class="fw-bold my-1 text-primary">{{ total_flights }}</h3>
+                        <span class="text-muted very-small">Commercial routes</span>
+                    </div>
+                    <div class="feature-icon-box bg-primary-subtle text-primary m-0" style="width:42px;height:42px;font-size:1.2rem;">
+                        <i class="bi bi-airplane-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Registered Passengers -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted very-small text-uppercase fw-bold">Passengers</span>
+                        <h3 class="fw-bold my-1 text-dark">{{ total_users }}</h3>
+                        <span class="text-muted very-small">Registered accounts</span>
+                    </div>
+                    <div class="feature-icon-box bg-secondary-subtle text-dark m-0" style="width:42px;height:42px;font-size:1.2rem;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Confirmed Bookings -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted very-small text-uppercase fw-bold">Confirmed</span>
+                        <h3 class="fw-bold my-1 text-success">{{ stats.confirmed_count|default(0) }}</h3>
+                        <span class="text-muted very-small">Seats held</span>
+                    </div>
+                    <div class="feature-icon-box bg-success-subtle text-success m-0" style="width:42px;height:42px;font-size:1.2rem;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Waitlisted Bookings -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted very-small text-uppercase fw-bold">Waitlisted</span>
+                        <h3 class="fw-bold my-1 text-warning">{{ stats.waitlisted_count|default(0) }}</h3>
+                        <span class="text-muted very-small">Overbooking buffer</span>
+                    </div>
+                    <div class="feature-icon-box bg-warning-subtle text-warning m-0" style="width:42px;height:42px;font-size:1.2rem;">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Cancelled Bookings -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted very-small text-uppercase fw-bold">Cancelled</span>
+                        <h3 class="fw-bold my-1 text-danger">{{ stats.cancelled_count|default(0) }}</h3>
+                        <span class="text-muted very-small">Seats reclaimed</span>
+                    </div>
+                    <div class="feature-icon-box bg-danger-subtle text-danger m-0" style="width:42px;height:42px;font-size:1.2rem;">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Total Revenue -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted very-small text-uppercase fw-bold">Revenue</span>
+                        <h4 class="fw-bold my-1 text-success">₹{{ "{:,.0f}".format(stats.total_revenue|default(0)) }}</h4>
+                        <span class="text-muted very-small">Demo settled</span>
+                    </div>
+                    <div class="feature-icon-box bg-info-subtle text-primary m-0" style="width:42px;height:42px;font-size:1.2rem;">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Bar -->
+    <div class="d-flex gap-2 mb-4 border-bottom pb-3 flex-wrap">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-dark btn-sm">Overview</a>
+        <a href="{{ url_for('admin.manage_flights') }}" class="btn btn-outline-secondary btn-sm">Flight Schedules</a>
+        <a href="{{ url_for('admin.manage_aircraft') }}" class="btn btn-outline-secondary btn-sm">Fleet &amp; Seats</a>
+        <a href="{{ url_for('admin.overbooking_policy') }}" class="btn btn-outline-secondary btn-sm">Overbooking Policy</a>
+        <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline-secondary btn-sm">All Bookings</a>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary btn-sm">Passengers</a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Overbooking & Flight Utilization Status -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Flight Capacity &amp; Overbooking Monitoring</h5>
+                    <a href="{{ url_for('admin.overbooking_policy') }}" class="small text-primary text-decoration-none">Manage Policies &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Flight</th>
+                                <th>Aircraft</th>
+                                <th>Physical Seats</th>
+                                <th>Overbook %</th>
+                                <th>Max Cap</th>
+                                <th>Confirmed</th>
+                                <th>Waitlisted</th>
+                                <th>Load Factor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in overbooking_overview %}
+                                <tr>
+                                    <td class="font-monospace fw-bold text-primary">{{ row.flight_number }}</td>
+                                    <td>{{ row.aircraft_name }}</td>
+                                    <td>{{ row.physical_capacity }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ row.overbooking_percentage }}%</span></td>
+                                    <td class="fw-semibold">{{ row.max_capacity }}</td>
+                                    <td><span class="badge bg-success-subtle text-success">{{ row.confirmed }}</span></td>
+                                    <td>
+                                        {% if row.waitlisted > 0 %}
+                                            <span class="badge bg-warning-subtle text-warning">{{ row.waitlisted }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar {% if row.utilization >= 100 %}bg-danger{% elif row.utilization >= 80 %}bg-warning{% else %}bg-primary{% endif %}" 
+                                                     role="progressbar" style="width: {{ [row.utilization, 100]|min }}%;"></div>
+                                            </div>
+                                            <span class="very-small">{{ row.utilization }}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="8" class="text-center text-muted py-3">No active flights to monitor.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reservations -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Recent Passenger Bookings</h5>
+                    <a href="{{ url_for('admin.manage_bookings') }}" class="small text-primary text-decoration-none">View All &rarr;</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for rb in recent_bookings %}
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="font-monospace fw-bold text-primary">{{ rb.pnr }}</span>
+                                    <span class="badge bg-light text-dark border very-small">{{ rb.flight_number }}</span>
+                                </div>
+                                <div class="small fw-semibold text-dark">{{ rb.passenger_name }}</div>
+                                <div class="very-small text-muted">{{ rb.source_code }} &rarr; {{ rb.dest_code }}</div>
+                            </div>
+                            <div class="text-end">
+                                {% if rb.status == 'CONFIRMED' %}
+                                    <span class="badge bg-success-subtle text-success very-small">CONFIRMED</span>
+                                {% elif rb.status == 'WAITLISTED' %}
+                                    <span class="badge bg-warning-subtle text-warning very-small">WAITLISTED</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger very-small">CANCELLED</span>
+                                {% endif %}
+                                <div class="very-small text-muted mt-1">₹{{ "{:,.0f}".format(rb.total_amount) }}</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4 small">No reservations registered yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
