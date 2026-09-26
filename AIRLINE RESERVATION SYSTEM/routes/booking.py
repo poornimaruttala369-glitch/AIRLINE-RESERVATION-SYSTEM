@@ -188,6 +188,7 @@ def confirm():
     passenger_name = request.form.get('passenger_name', '').strip()
     passenger_email = request.form.get('passenger_email', '').strip()
     passenger_phone = request.form.get('passenger_phone', '').strip()
+    payment_method = request.form.get('payment_method', 'DEMO_CARD').strip()
 
     if not passenger_name or not passenger_email or not passenger_phone:
         flash("All passenger fields are required.", "danger")
@@ -202,6 +203,7 @@ def confirm():
             passenger_name=passenger_name,
             passenger_email=passenger_email,
             passenger_phone=passenger_phone
+            payment_method=payment_method
         )
 
         if result['status'] == 'WAITLISTED':
