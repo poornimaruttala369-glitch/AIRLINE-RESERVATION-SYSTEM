@@ -41,8 +41,16 @@ def generate_unique_pnr(cursor):
             return pnr_candidate
     raise BookingError("Unable to allocate a unique PNR. Please retry.")
 
+def reserve_flight_ticket(
+    user_id,
+    flight_id,
+    seat_id,
+    passenger_name,
+    passenger_email,
+    passenger_phone,
+    payment_method='DEMO_CARD'
+):
 
-def reserve_flight_ticket(user_id, flight_id, seat_id, passenger_name, passenger_email, passenger_phone):
     """
     Executes atomic, transaction-safe seat reservation.
     Follows Section 36 Strict Transaction Workflow:
@@ -158,12 +166,31 @@ def reserve_flight_ticket(user_id, flight_id, seat_id, passenger_name, passenger
                 f"Concurrent collision: Seat {seat['seat_number']} was claimed. Transaction rolled back safely."
             )
 
-        # Step 8: Demo Payment settlement
-        txn_ref = f"TXN_{pnr}_{random.randint(1000, 9999)}"
-        cur.execute("""
-            INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_ref)
-            VALUES (%s, %s, 'DEMO_CARD', 'PAID', %s)
-        """, (booking_id, total_amount, txn_ref))
+       # Step 8: Demo Payment settlement
+# Academic project only - no real financial transaction occurs.
+
+allowed_payment_methods = ('DEMO_CARD', 'DEMO_UPI')
+
+if payment_method not in allowed_payment_methods:
+    raise BookingError("Invalid payment method selected.")
+
+txn_ref = f"TXN_{pnr}_{random.randint(1000, 9999)}"
+
+cur.execute("""
+    INSERT INTO payments (
+        booking_id,
+        amount,
+        payment_method,
+        payment_status,
+        transaction_ref
+    )
+    VALUES (%s, %s, %s, 'PAID', %s)
+""", (
+    booking_id,
+    total_amount,
+    payment_method,
+    txn_ref
+)) 
 
         # Return booking summary dictionary
         return {
