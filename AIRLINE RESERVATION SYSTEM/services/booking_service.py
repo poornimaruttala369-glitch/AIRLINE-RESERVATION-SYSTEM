@@ -41,8 +41,15 @@ def generate_unique_pnr(cursor):
             return pnr_candidate
     raise BookingError("Unable to allocate a unique PNR. Please retry.")
 
-
-def reserve_flight_ticket(user_id, flight_id, seat_id, passenger_name, passenger_email, passenger_phone):
+def reserve_flight_ticket(
+    user_id,
+    flight_id,
+    seat_id,
+    passenger_name,
+    passenger_email,
+    passenger_phone,
+    payment_method='DEMO_CARD'
+):
     """
     Executes atomic, transaction-safe seat reservation.
     Follows Section 36 Strict Transaction Workflow:
