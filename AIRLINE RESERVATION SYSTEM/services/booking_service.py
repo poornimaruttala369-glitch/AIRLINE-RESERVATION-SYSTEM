@@ -159,12 +159,30 @@ def reserve_flight_ticket(user_id, flight_id, seat_id, passenger_name, passenger
             )
 
         # Step 8: Demo Payment settlement
-        txn_ref = f"TXN_{pnr}_{random.randint(1000, 9999)}"
-        cur.execute("""
-            INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_ref)
-            VALUES (%s, %s, 'DEMO_CARD', 'PAID', %s)
-        """, (booking_id, total_amount, txn_ref))
+        # Academic project only - no real financial transaction occurs.
 
+        allowed_payment_methods = ('DEMO_CARD', 'DEMO_UPI')
+
+        if payment_method not in allowed_payment_methods:
+            raise BookingError("Invalid payment method selected.")
+
+        txn_ref = f"TXN_{pnr}_{random.randint(1000, 9999)}"
+
+        cur.execute("""
+            INSERT INTO payments (
+                booking_id,
+                amount,
+                payment_method,
+                payment_status,
+                transaction_ref
+            )
+            VALUES (%s, %s, %s, 'PAID', %s)
+        """, (
+            booking_id,
+            total_amount,
+            payment_method,
+            txn_ref
+        ))
         # Return booking summary dictionary
         return {
             'booking_id': booking_id,
